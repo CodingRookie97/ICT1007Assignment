@@ -27,27 +27,27 @@ void main() {
 		printf("Your choice: ");
 		scanf(" %c", &selection);
 		printf("\n");
-		if (selection == '1') {
-			//Perform normal round robin algorithm
+		switch (selection) {
+		case '1':
 			normalRR(iBurstTime, ct, t);
-		}
-		else if (selection == '2') {
-			//Perform Sorted round robin algorithm
+			break;
+		case '2':
 			sortedRR(iBurstTime, ct, t);
-		}
-		else if (selection == '3') {
-			//Perform Priority round robin
+			break;
+		case '3':
 			priorityRR(iBurstTime, ct, t);
-		}
-		else if (selection == '4') {
-			//Perform Shortest Job First round robin
+			break;
+		case '4':
 			sjfRR(iBurstTime, ct, t);
-		}
-		else {
+			break;
+		case 'Q':
+		case 'q':
+			printf("You have terminated the application!");
+			break;
+		default:
 			printf("Invalid selection, please try again!\n");
 		}
 	} while (selection != 'Q' && selection != 'q');
-	printf("You have terminated the application!");
 }
 void displaySplash() {
 	char splash[14][63] = {
@@ -70,7 +70,7 @@ void displaySplash() {
 	for (int i = 0; i < 14; ++i) {
 		printf("                               %s\n", splash[i]);
 	}
-	printf("\n                                                  CPU Scheudling Algorithms");
+	printf("\n                                                  CPU Scheduling Algorithms");
 	printf("\n                                                     Group 26 members:");
 	printf("\n                                           Ni Jun Jie Shawn              1902112");
 	printf("\n                                           Zulfadli bin Johari           1902147");
