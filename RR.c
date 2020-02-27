@@ -8,12 +8,10 @@ void sjfRR(float iBurstTime[], float ct[], int t);
 void main() {
 	displaySplash();
 	char selection;
-	int i, n, t;
+	int i, n, t = 4;
 	do {
-		float iBurstTime[MAXPROCESSES] = { 24, 3, 3 }, wa[10], tat[10], ct[10], max, twt = 0, awt = 0, ttt = 0, att = 0, temp = 0;
-		//Entering size of time quantum (t)
-		printf("\nEnter the size of time slice : ");
-		scanf("%d", &t);
+		int iBurstTime[MAXPROCESSES] = { 24, 3, 3 }, ct[MAXPROCESSES];
+		float wt = 0, att = 0;
 		for (i = 0; i < MAXPROCESSES; i++) {
 			//ct is used to store actual burst time for each processes
 			ct[i] = iBurstTime[i];
@@ -81,9 +79,10 @@ void displaySplash() {
 	getch();
 	system("cls");
 }
-void normalRR(float iBurstTime[], float ct[], int t) {
+void normalRR(int iBurstTime[], int ct[], int t) {
 	int i, j, k, l;
-	float wa[10], tat[10], max, twt = 0, awt = 0, ttt = 0, att = 0, temp = 0;
+	int wa[10], tat[10], max, twt = 0, ttt = 0, temp = 0;
+	float awt = 0, att = 0;
 	printf(" Normal Round robin\n");
 	printf("--------------------\n");
 	max = iBurstTime[0];
@@ -113,6 +112,7 @@ void normalRR(float iBurstTime[], float ct[], int t) {
 		}
 		max--;
 	}
+	printf("Processes   Burst time   Waiting time   Turnaround time\n");
 	//waiting time (wa) is equivalent to turnaround time - burst time
 	for (k = 0; k < MAXPROCESSES; k++) {
 		wa[k] = tat[k] - ct[k];
@@ -121,14 +121,16 @@ void normalRR(float iBurstTime[], float ct[], int t) {
 	for (l = 0; l < MAXPROCESSES; l++) {
 		twt += wa[l];
 		ttt += tat[l];
-		printf("Waiting time for process #%d: %.3f\n", (l + 1), wa[l]);
-		printf("Turnaround time for process #%d: %.3f\n", (l + 1), tat[l]);
+		printf("   %d ", (l + 1));
+		printf("          %3d ", ct[l]);
+		printf("          %3d ", wa[l]);
+		printf("           %3d\n", tat[l]);
 	}
 	//Finding out the average waiting time
-	awt = twt / MAXPROCESSES;
+	awt = (float) twt / MAXPROCESSES;
 	printf("\nAverage waiting time for %d processes is %.3f.\n", MAXPROCESSES, awt);
 	//Finding out the average turnaround time
-	att = ttt / MAXPROCESSES;
+	att = (float) ttt / MAXPROCESSES;
 	printf("Average turnaround time for %d processes is %.3f.\n", MAXPROCESSES, att);
 }
 void sortedRR(float iBurstTime[], float ct[], int t) {
