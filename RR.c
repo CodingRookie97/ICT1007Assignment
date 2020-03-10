@@ -3,11 +3,12 @@
 void displaySplash();
 void findAvgTime(char selection, int n, int bt[], int quantum, int p[]);
 void findRRWaitingTime(int n, int bt[], int wt[], int quantum);
-void findPriorityRRWaitingTime(int n, int bt[], int wt[], int quantum, int p[], int pi[], int counter, int remaining);
+void findSortedWaitingTime(int n, int bt[], int unsortedBT[], int wt[], int quantum, int pi[]);
+void findPriorityRRWaitingTime(int n, int bt[], int unsortedBT[], int wt[], int quantum, int p[], int pi[], int counter);
 void findMeanTSJFWaitingTime(int n, int bt[], int wt[], int quantum, int p[]);
 void findTurnAroundTime(int n, int bt[], int wt[], int tat[], int p[]);
 void normalRR(char selection, int quantum);
-void sortedRR(char selection, int quantum);
+void sortedRR(char selection);
 void priorityRR(char selection, int quantum);
 void meanTSJFRR(char selection, int quantum);
 void findAvgTime(char selection, int n, int bt[], int quantum, int p[]);
@@ -16,11 +17,16 @@ void main() {
 	displaySplash();
 	char selection;
 	int i, n, quantum;
+	int iBurstTime[] = { 5, 6, 7, 9, 2, 3 }, ct[MAXPROCESSES];
+	float wt = 0, att = 0;
 	do {
-		printf("Enter a time quantum for slicing: ");
-		scanf("%d", &quantum);
-		int iBurstTime[] = { 5, 6, 7, 9, 2, 3 }, ct[MAXPROCESSES];
-		float wt = 0, att = 0;
+		do {
+			printf("Enter a time quantum for slicing for Choices 1, 3-5: ");
+			scanf("%d", &quantum);
+			if (quantum <= 0) {
+				printf("Sorry, you have entered an invalid time quantum, please try again!\n");
+			}
+		} while (quantum <= 0);
 		for (i = 0; i < MAXPROCESSES; i++) {
 			//ct is used to store actual burst time for each processes
 			ct[i] = iBurstTime[i];
@@ -30,7 +36,6 @@ void main() {
 		printf("2: Sorted Round Robin Algorithm\n");
 		printf("3: Modified Round Robin Scheduling Algorithm Based on Priorities\n");
 		printf("4: Mean Threshold Shortest Job Round Robin CPU Scheduling Algorithm\n");
-		printf("5: Round Robin Algorithms Comparison\n");
 		printf("Q: Terminate application\n");
 		printf("Your choice: ");
 		scanf(" %c", &selection);
@@ -40,7 +45,7 @@ void main() {
 			normalRR(selection, quantum);
 			break;
 		case '2':
-			sortedRR(selection, quantum);
+			sortedRR(selection);
 			break;
 		case '3':
 			priorityRR(selection, quantum);
@@ -48,15 +53,13 @@ void main() {
 		case '4':
 			meanTSJFRR(selection, quantum);
 			break;
-		case '5':
-			rrComparison();
-			break;
 		case 'Q':
 		case 'q':
 			printf("You have terminated the application!");
 			break;
 		default:
 			printf("Invalid selection, please try again!\n");
+			break;
 		}
 	} while (selection != 'Q' && selection != 'q');
 }
@@ -93,7 +96,7 @@ void displaySplash() {
 	system("cls");
 }
 void findAvgTime(char selection, int n, int bt[], int quantum, int p[]) {
-	int wt[20], tat[20], unsortedBT[20], unsortedPriority[20], total_wt = 0, total_tat = 0, counter = 0, remaining = 0;
+	int wt[20], tat[20], unsortedBT[20], unsortedPriority[20], total_wt = 0, total_tat = 0, counter = 0;
 	//If users select Round Robin
 	if (selection == '1') {
 		findRRWaitingTime(n, bt, wt, quantum, p);
@@ -110,7 +113,20 @@ void findAvgTime(char selection, int n, int bt[], int quantum, int p[]) {
 	}
 	//If users select Sorted Round Robin
 	else if (selection == '2') {
+		for (int i = 0; i < n; i++) {
+			unsortedBT[i] = bt[i];
+		}
 		//TODO Add functionalities for Sorted Round Robin
+		findSortedWaitingTime(n, bt, unsortedBT, wt, quantum, p);
+		// Function to find turn around time for all processes 
+		findTurnAroundTime(n, unsortedBT, wt, tat, p);
+		printf("Processes\tBurst Time\tWaiting Time\tTurn Around Time\n");
+		// Calculate total waiting time and total turn around time 
+		for (int i = 0; i < n; i++) {
+			total_wt = total_wt + wt[i];
+			total_tat = total_tat + tat[i];
+			printf("%d\t\t%2d\t\t%2d\t\t%2d\n", (i + 1), unsortedBT[i], wt[i], tat[i]);
+		}
 	}
 	//If users select Priority Round Robin
 	else if (selection == '3') {
@@ -119,9 +135,10 @@ void findAvgTime(char selection, int n, int bt[], int quantum, int p[]) {
 			unsortedBT[i] = bt[i];
 			unsortedPriority[i] = p[i];
 		}
-		int pi[MAXPROCESSES] = { 1, 2, 3, 4, 5 };
+		int pi[MAXPROCESSES] = { 1, 2, 3, 4, 5, 6 };
 		// Function to find waiting time of all processes 
-		findPriorityRRWaitingTime(n, bt, wt, quantum, p, pi, counter, remaining);
+		counter = n;
+		findPriorityRRWaitingTime(n, bt, unsortedBT, wt, quantum, p, pi, counter);
 		// Function to find turn around time for all processes 
 		findTurnAroundTime(n, unsortedBT, wt, tat, p);
 		// Display processes along with all details
@@ -139,6 +156,7 @@ void findAvgTime(char selection, int n, int bt[], int quantum, int p[]) {
 		for (int i = 0; i < n; i++) {
 			unsortedBT[i] = bt[i];
 		}
+		//This is the unsorted process index
 		int pi[MAXPROCESSES] = { 1, 2, 3, 4, 5, 6 };
 		// Function to find waiting time of all processes 
 		findMeanTSJFWaitingTime(n, bt, wt, quantum, p);
@@ -166,6 +184,7 @@ void findRRWaitingTime(int n, int bt[], int wt[], int quantum) {
 	}
 	printf(" Round Robin (RR) for %d process(es)\n", n);
 	printf("------------------------------------\n");
+	printf("Time Quantum: %d\n", quantum);
 	while (1) {
 		int done = 1;
 		//loops through all process starting from the first indx of RR process
@@ -197,89 +216,166 @@ void findRRWaitingTime(int n, int bt[], int wt[], int quantum) {
 		}
 	}
 }
-void findPriorityRRWaitingTime(int n, int bt[], int wt[], int quantum, int p[], int pi[], int counter, int remaining) {
-	int temp1, temp2, temp3, i, j, t = 0;
-	for (i = 0; i < n; i++) {
-		for (j = i + 1; j < n; j++) {
-			//Swaps the priority here 
-			//It checks the priority here
-			if (p[i] > p[j]) {
-				//Holds the lowest priority burst time
-				temp1 = bt[i];
-				//Changes the burst[i] to burst[j]
-				bt[i] = bt[j];
-				//new burst of j is to i
-				bt[j] = temp1;
-				//it stores priority into temp
-				temp2 = p[i];
-				//swaps priority
-				p[i] = p[j];
-				//new priority
-				p[j] = temp2;
-				//Stores process indexes into temp
-				temp3 = pi[i];
-				//swaps process index
-				pi[i] = pi[j];
-				//new process index
-				pi[j] = temp3;
+void findSortedWaitingTime(int n, int bt[], int unsortedBT[], int wt[], int quantum, int pi[]) {
+	int count, j, t = 0, tempIndex, tempBt, remain, flag = 0;
+	remain = n;
+	printf(" Sorted Round Robin for %d process(es)\n", n);
+	printf("--------------------------------------\n");
+	printf("Time Quantum: %d\n", quantum);
+	for (j = 0; j < n; j++) {
+		for (int k = j + 1; k < n; k++) {
+			//Comparison between 2 burst times from array
+			if (bt[j] > bt[k]) {
+				//Sort out which process index will come first based on earliest arrival time
+				tempIndex = pi[j];
+				pi[j] = pi[k];
+				pi[k] = tempIndex;
+				//Sort out which amount of burst time will execute first based on earliest arrival time
+				tempBt = bt[j];
+				bt[j] = bt[k];
+				bt[k] = tempBt;
 			}
 		}
 	}
-	//stores bt into compt, waiting time = 0
-	// Make a copy of burst times bt[] to store remaining 
-	// burst times. 
-	int rem_bt[20];
-	for (int i = 0; i < n; i++) {
-		rem_bt[i] = bt[i];
+	for (t = 0, count = 0; remain != 0;)
+	{
+		if (bt[count] <= quantum && bt[count] > 0)
+		{
+			t += bt[count];
+			bt[count] = 0;
+			flag = 1;
+		}
+		else if (bt[count] > 0)
+		{
+			bt[count] -= quantum;
+			t += quantum;
+		}
+		if (bt[count] == 0 && flag == 1)
+		{
+			remain--;
+			wt[pi[count] - 1] = t - unsortedBT[pi[count] - 1];
+			flag = 0;
+		}
+		if (count == n - 1) {
+			count = 0;
+		}
+		else if (t >= 0) {
+			count++;
+		}
+		else {
+			count = 0;
+		}
 	}
+}
+void findPriorityRRWaitingTime(int n, int bt[], int unsortedBT[], int wt[], int quantum, int p[], int pi[], int counter) {
+	int prioritySorted = 0, temp1, temp2, temp3, i, j, k, index = 0, cpyIndex = 0, t = 0;
+	//stores bt into compt, waiting time = 0
+	// Make a copy of burst times bt[] to store remaining burst times. 
+	int rem_bt[MAXPROCESSES];
+	int new_rem_bt[MAXPROCESSES];
+	int new_pi[MAXPROCESSES];
 	printf(" Round Robin with Priority for %2d process(es)\n", n);
 	printf("-----------------------------------------------\n");
-	// until done, it loops through
-	while (1) {
-		int done = 1;
-		//loops through all process
-		for (int i = 0; i < n; i++) {
-			//checks for burst greater than 0
-			if (rem_bt[i] > 0) {
-				done = 0; // There is a pending process 
-				if (rem_bt[i] > quantum) {
-					// Increase the value of t i.e. shows 
-					// how much time a process has been processed 
-					t += quantum;
-					//reduce burst by quantum
-					rem_bt[i] -= quantum;
-				}
-				//means burst smaller than quantum
-				else {
-					// Increase the value of t i.e. shows how much time a process has been processed 
-					t = t + rem_bt[i];
-					// Waiting time is current time minus time  used by this process 
-					wt[pi[i] - 1] = t - bt[i];
-					// As the process gets fully executed ,make its remaining burst time = 0 
-					rem_bt[i] = 0;
+	while(1) {
+		if (!prioritySorted) {
+			//Sort priority first only for initial step
+			for (i = 0; i < n; i++) {
+				for (j = i + 1; j < n; j++) {
+					//Swaps the priority here 
+					//It checks the priority here
+					if (p[i] > p[j]) {
+						//Holds the lowest priority burst time
+						temp1 = bt[i];
+						//Changes the burst[i] to burst[j]
+						bt[i] = bt[j];
+						//new burst of j is to i
+						bt[j] = temp1;
+						//it stores priority into temp
+						temp2 = p[i];
+						//swaps priority
+						p[i] = p[j];
+						//new priority
+						p[j] = temp2;
+						//Stores process indexes into temp
+						temp3 = pi[i];
+						//swaps process index
+						pi[i] = pi[j];
+						//new process index
+						pi[j] = temp3;
+					}
 				}
 			}
-			//Checks for remaining burst, if its not 0, adds a counter(to show that its there and remaining of burst)
-			if (rem_bt[i] != 0) {
-				counter += 1;
-				remaining += rem_bt[i];
-			}
-			//Checks if burst is 0 and i ==4 ( means loop through every process)
-			else if (rem_bt[i] == 0 && i == 4) {
-				if (remaining == 0) {
-					break;
-				}
-				//new quantum  and resets counter and remaining to 0
-				else {
-					quantum = remaining / (counter);
-					counter = 0;
-					remaining = 0;
-				}
+			prioritySorted = 1;
+			//Make a copy of the sorted burst times
+			for (int k = 0; k < n; k++) {
+				rem_bt[k] = bt[k];
 			}
 		}
-		// If all processes are done 
-		if (done == 1) {
-			break;
+		if (rem_bt[index] != 0) {
+			if (rem_bt[index] > quantum) {
+				// Increase the value of t i.e. shows how much time a process has been processed 
+				t += quantum;
+				//reduce burst by quantum
+				rem_bt[index] -= quantum;
+			}
+			else {
+				//Find turnaround time of a process which is the current time - original burst of the process
+				t += rem_bt[index];
+				wt[pi[index] - 1] = t - unsortedBT[pi[index] - 1];
+				rem_bt[index] = 0;
+				counter--;
+			}
+		}
+		//Increment the index to execute every single process 1 by 1
+		index++;
+		if (index == n) {
+			//If all processes completes its execution, exit the while loop
+			if (counter == 0) {
+				break;
+			}
+			else {
+				//Resets index if last process
+				index = 0;
+				//Do sorting again, but this time will sort based on remaining burst times only
+				for (i = 0; i < n; i++) {
+					if (rem_bt[i] != 0) {
+						//Put inside a new copy of remaining burst times in order to determine the time quantum of remaining processes
+						new_rem_bt[cpyIndex] = rem_bt[i];
+						cpyIndex++;
+					}
+				}
+				//Reset the index count
+				cpyIndex = 0;
+				for (i = 0; i < counter; i++) {
+					for (j = i + 1; j < counter; j++) {
+						//Swaps the remaining burst time here (lowest burst time = highest priority)
+						//It checks the remaining burst time here
+						if (rem_bt[i] > 0) {
+							if (rem_bt[i] > rem_bt[j]) {
+								//Holds the lowest priority burst time
+								temp1 = rem_bt[i];
+								//Changes the burst[i] to burst[j]
+								rem_bt[i] = rem_bt[j];
+								//new burst of j is to i
+								rem_bt[j] = temp1;
+								//Stores process indexes into temp
+								temp2 = pi[i];
+								//swaps process index
+								pi[i] = pi[j];
+								//new process index
+								pi[j] = temp2;
+							}
+						}
+					}
+				}
+				//Find the new time quantum based on the median of the remaining burst times
+				if (counter % 2 != 0) {
+					quantum = new_rem_bt[(counter) / 2];
+				}
+				else {
+					quantum = (new_rem_bt[(counter - 1) / 2] + new_rem_bt[counter / 2]) / 2;
+				}
+			}
 		}
 	}
 }
@@ -291,6 +387,7 @@ void findMeanTSJFWaitingTime(int n, int bt[], int wt[], int quantum, int p[]) {
 	for (int i = 0; i < n; i++) {
 		totalBurst += bt[i];
 	}
+	printf("Time Quantum: %d\n", quantum);
 	printf("Total Burst Time is: %d\n", totalBurst);
 	threshold = (float)totalBurst / n;
 	//Find the threshold time for the processes in the form of (Total Burst Time) / Number of Processes
@@ -310,7 +407,7 @@ void findMeanTSJFWaitingTime(int n, int bt[], int wt[], int quantum, int p[]) {
 		if (noOfSJFProcesses > 0) {
 			for (int j = 0; j < n; j++) {
 				for (int k = j + 1; k < n; k++) {
-					//Comparison between 2 arrival times from array
+					//Comparison between 2 burst times from array
 					if (bt[j] > bt[k]) {
 						//Sort out which process index will come first based on earliest arrival time
 						tempIndex = pi[j];
@@ -414,27 +511,34 @@ void findTurnAroundTime(int n, int bt[], int wt[], int tat[], int p[]) {
 	}
 }
 void normalRR(char selection, int quantum) {
-	int burst_time[] = { 24, 3, 3 };
+	int burst_time[] = { 20, 17, 28, 24, 19, 30 };
 	int n = sizeof burst_time / sizeof burst_time[0];
 	//Priority
-	int pi[] = { 1, 2, 3 };
+	int pi[] = { 1, 2, 3, 4, 5, 6 };
 	findAvgTime(selection, n, burst_time, quantum, pi);
 }
-void sortedRR(char selection, int quantum) {
+void sortedRR(char selection) {
 	//TODO: Sorted Round Robin Algorithm
-	printf(" Sorted Round Robin\n");
-	printf("--------------------\n");
+	int totalBurst = 0;
+	int burst_time[] = { 20, 17, 28, 24, 19, 30 };
+	int n = sizeof burst_time / sizeof burst_time[0];
+	for (int i = 0; i < n; i++) {
+		totalBurst += burst_time[i];
+	}
+	int quantum = totalBurst / n;
+	int pi[] = { 1, 2, 3, 4, 5, 6 };
+	findAvgTime(selection, n, burst_time, quantum, pi);
 }
 void priorityRR(char selection, int quantum) {
 	//TODO: Modified Round Robin based on priorities
-	int burst_time[] = { 23, 19, 10, 11, 5 };
+	int burst_time[] = { 20, 17, 28, 24, 19, 30 };
 	int n = sizeof burst_time / sizeof burst_time[0];
 	//Priority
-	int p[] = { 4, 2, 1, 3, 5 };
+	int p[] = { 4, 2, 1, 3, 5, 6 };
 	findAvgTime(selection, n, burst_time, quantum, p);
 }
 void meanTSJFRR(char selection, int quantum) {
-	int burst_time[] = { 5, 6, 7, 9, 2, 3 };
+	int burst_time[] = { 20, 17, 28, 24, 19, 30 };
 	//Process Indexes
 	int pi[] = { 1, 2, 3, 4, 5, 6 };
 	int n = sizeof burst_time / sizeof burst_time[0];
