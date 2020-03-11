@@ -401,7 +401,7 @@ void findPriorityRRWaitingTime(int n, int bt[], int unsortedBT[], int wt[], int 
 					//If the number of processes left is even
 					quantum = (new_rem_bt[(counter - 1) / 2] + new_rem_bt[counter / 2]) / 2;
 				}
-				//This is to track down how many number of executions it takes for the process amnd display the updated time quantum
+				//This is to track down how many number of executions it takes for the process and display the updated time quantum
 				noOfExecutions++;
 				printf("New Time Quantum after %d execution(s): %d\n", noOfExecutions, quantum);
 			}
